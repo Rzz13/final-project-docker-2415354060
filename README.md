@@ -203,9 +203,67 @@ Kunjungi `http://localhost:8080` di browser, login dengan user `root` dan passwo
 
 **Dokumentasi/Screenshot:**
 ![Aplikasi Berjalan di Browser](image/hasil-browser.png)
+![PhpMyAdmin Berjalan di Browser](image/hasil-phpadmin.png)
+
+---
+
+### Langkah 5: Build dan Push Image ke Docker Hub
+
+Setelah aplikasi berhasil diuji secara lokal, langkah selanjutnya adalah membuat _image_ Docker dari aplikasi **backend** dan mengunggahnya ke Docker Hub agar dapat dibagikan atau dideploy di lingkungan lain.
+
+**1. Login ke Docker Hub**
+```bash
+docker login
+```
+Masukkan **username** dan **password** akun Docker Hub saat diminta.
+
+**2. Build image backend**
+```bash
+docker build -t final-docker-app ./app
+```
+
+**Dokumentasi/Screenshot:**
+![build Docker IMAGE](image/build.png)
+
+
+Perintah ini membangun _image_ dari `Dockerfile` yang berada di dalam folder `app`.
+
+**3. Tag image dengan username Docker Hub**
+```bash
+docker tag final-docker-app <username>/final-docker-app:v1.0
+```
+> Ganti `<username>` dengan username Docker Hub Anda.
+
+**Contoh:**
+```bash
+docker tag final-docker-app madedianpp/final-docker-app:v1.0
+```
+
+**4. Push image ke Docker Hub**
+```bash
+docker push <username>/final-docker-app:v1.0
+```
+
+**Contoh:**
+```bash
+docker push rzz17/final-docker-app:v1.0
+```
+
+**Dokumentasi/Screenshot:**
+![Push ke Docker HUB](image/push.png)
+
+
+**5. Verifikasi di Docker Hub**
+Buka [https://hub.docker.com/repositories](https://hub.docker.com/repositories) di browser, lalu pastikan repository `<username>/final-docker-app` sudah muncul dengan tag `v1.0`.
+
+**Catatan:** Hanya image aplikasi **backend** (Node.js) yang perlu di-push. Image MySQL dan phpMyAdmin sudah tersedia secara publik di Docker Hub.
+
+**Dokumentasi/Screenshot:**
+![Image Berhasil di Push ke Docker Hub](image/docker-push.png)
 
 ---
 
 ## Kesimpulan
+
 
 Praktikum ini berhasil membuat aplikasi REST API CRUD berbasis container dengan menggunakan Docker Compose yang terdiri dari tiga service: aplikasi Node.js (backend), database MySQL, dan phpMyAdmin. Dengan Docker Compose, seluruh service dapat dijalankan secara terintegrasi hanya dengan satu perintah (`docker compose up -d`). Data pada MySQL juga tersimpan secara persisten menggunakan volume Docker. Aplikasi dapat diakses melalui port 3000 untuk API, dan phpMyAdmin melalui port 8080 untuk manajemen database secara visual.
