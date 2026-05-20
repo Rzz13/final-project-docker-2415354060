@@ -23,13 +23,31 @@
 
 ### Langkah 1: Membuat Aplikasi Node.js dan Dockerfile
 
-Pada langkah ini, saya membuat aplikasi REST API CRUD sederhana menggunakan Node.js dan Express.js yang terhubung ke database MySQL. Saya juga membuat `Dockerfile` untuk meng-_containerize_ aplikasi tersebut.
+Pada langkah ini, saya memulai dengan menginisialisasi project Node.js dan menginstal dependensi yang diperlukan, kemudian membuat aplikasi REST API CRUD serta `Dockerfile`.
+
+**Inisialisasi project Node.js:**
+```bash
+# Masuk ke folder app
+cd app
+
+# Inisialisasi project Node.js
+npm init -y
+
+# Install dependensi yang dibutuhkan
+npm install express mysql2 dotenv
+```
+
+
+**Dokumentasi/Screenshot:**
+![Proses Install](/image/install.png)
+
 
 **File yang dibuat:**
 - **`app/app.js`** — Aplikasi Express dengan endpoint CRUD (`GET /`, `GET /users/:id`, `POST /users`, `PUT /users/:id`, `DELETE /users/:id`) yang terhubung ke MySQL menggunakan library `mysql2` dan `dotenv`.
-- **`app/package.json`** — Konfigurasi dependensi Node.js (`express`, `mysql2`, `dotenv`).
+- **`app/package.json`** — Konfigurasi dependensi Node.js (`express`, `mysql2`, `dotenv`) yang dihasilkan dari perintah `npm init -y` dan `npm install`.
 - **`app/.env`** — File konfigurasi environment untuk koneksi database (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `APP_PORT`).
 - **`app/Dockerfile`** — File untuk membangun _image_ Docker aplikasi.
+
 
 ```dockerfile
 FROM node:18-alpine
@@ -48,17 +66,19 @@ CMD ["npm", "start"]
 ```
 
 **Dokumentasi/Screenshot:**
-![Proses Build](/image/build.png)
+![Proses Build](/image/struktur.png)
 
 ---
 
 ### Langkah 2: Membuat File docker-compose.yml
 
-Pada langkah ini, saya membuat file `docker-compose.yml` untuk mengatur dan mengelola tiga _service_ yang saling terhubung:
+Pada langkah ini, saya membuat file `docker-compose.yml` untuk mengatur dan mengelola tiga _service_ yang saling terhubung dalam satu _network_ khusus:
 
 1. **backend** — Aplikasi Node.js yang di-*build* dari folder `./app`, berjalan di port `3000:3000`.
 2. **mysql** — Database MySQL 8 dengan username `root`, password `root`, database `praktikum_db`, menggunakan port `3307:3306` (host : container) dengan volume persisten `mysql_data`.
 3. **phpmyadmin** — Antarmuka web untuk mengelola database MySQL, berjalan di port `8080:80`, terhubung ke service `mysql`.
+
+Seluruh service dihubungkan melalui **custom network** bernama `final-docker` dengan driver `bridge` agar dapat berkomunikasi satu sama lain menggunakan nama service sebagai hostname. Pada service **mysql** juga ditambahkan **healthcheck** untuk memastikan MySQL benar-benar siap menerima koneksi sebelum service **backend** mulai berjalan.
 
 ```yaml
 services:
@@ -68,9 +88,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     env_file:
       - /app/.env
+    networks:
+      - final-docker
 
   mysql:
     image: mysql:8
@@ -82,6 +105,14 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    networks:
+      - final-docker
       
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -92,10 +123,18 @@ services:
       - "8080:80"
     depends_on:
       - mysql
+    networks:
+      - final-docker
 
 volumes:
   mysql_data:
+
+networks:
+  final-docker:
+    driver: bridge
 ```
+
+
 
 **Dokumentasi/Screenshot:**
 ![File docker-compose.yml](image/docker-compose-config.png)
@@ -114,8 +153,9 @@ docker compose up -d --build
 Perintah di atas akan:
 1. Membangun _image_ Docker untuk service **backend** berdasarkan `Dockerfile`.
 2. Mengunduh _image_ **mysql:8** dan **phpmyadmin/phpmyadmin** dari Docker Hub (jika belum ada).
-3. Menjalankan ketiga _container_ secara berurutan dengan mekanisme `depends_on`.
+3. Menjalankan ketiga _container_ secara berurutan dengan mekanisme `depends_on`, di mana **backend** menunggu **mysql** hingga statusnya _healthy_ berkat konfigurasi `healthcheck`.
 4. Membuat volume `mysql_data` untuk menyimpan data database secara persisten.
+
 
 **Dokumentasi/Screenshot:**
 ![Proses Build dan Run Sukses](image/docker-compose-up.png)

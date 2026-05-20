@@ -5,9 +5,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     env_file:
       - /app/.env
+    networks:
+      - final-docker
 
   mysql:
     image: mysql:8
@@ -19,6 +22,15 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    networks:
+      - final-docker
+
       
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -29,7 +41,12 @@ services:
       - "8080:80"
     depends_on:
       - mysql
-
+    networks:
+      - final-docker
 
 volumes:
   mysql_data:
+
+networks:
+  final-docker:
+    driver: bridge
