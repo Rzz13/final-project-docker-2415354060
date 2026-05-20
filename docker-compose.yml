@@ -1,5 +1,5 @@
 services:
-  backend:
+  app:
     container_name: final-docker-app
     build: ./app
     ports:

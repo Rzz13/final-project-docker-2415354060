@@ -259,7 +259,7 @@ Buka [https://hub.docker.com/repositories](https://hub.docker.com/repositories) 
 **Catatan:** Hanya image aplikasi **backend** (Node.js) yang perlu di-push. Image MySQL dan phpMyAdmin sudah tersedia secara publik di Docker Hub.
 
 **Dokumentasi/Screenshot:**
-![Image Berhasil di Push ke Docker Hub](image/docker-push.png)
+![Image Berhasil di Push ke Docker Hub](image/push.png)
 
 ---
 
