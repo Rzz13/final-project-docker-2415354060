@@ -1,0 +1,35 @@
+services:
+  backend:
+    container_name: final-docker-app
+    build: ./app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    env_file:
+      - /app/.env
+
+  mysql:
+    image: mysql:8
+    container_name: final-mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: praktikum_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: final-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+
+volumes:
+  mysql_data:
